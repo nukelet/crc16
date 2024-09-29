@@ -710,9 +710,38 @@ uint16_t bswap16(uint16_t val)
 	return swapped;
 }
 
+static inline uint16_t crc16_naive_byte(uint16_t crc, uint8_t data)
+{
+	uint8_t i = 0;
+	crc ^= (uint16_t) data << 8;
+	for (i = 0; i < 8; i++) {
+		printf("(i=%hhu) crc = 0x%04x\n", i, crc);
+		if (crc & (uint16_t) 0x8000) {
+			crc = (crc << 1) ^ (uint16_t) 0x8005;
+			printf("XOR\n");
+		} else {
+			crc = crc << 1;
+			printf("shift\n");
+		}
+	}
+
+	return crc;
+}
+
+static void crc16_naive_test_byte()
+{
+	uint8_t input = 0x92;
+	uint16_t crc = crc16_byte(0x0000, input);
+	uint16_t crc_naive = crc16_naive_byte(0x0000, input);
+	printf("crc16_byte(0x%02x) = 0x%04x\n", input, crc);
+	printf("crc16_naive_byte(0x%02x) = 0x%04x\n", input, crc_naive);
+	fflush(stdout);
+	assert(crc == crc_naive);
+}
+
 uint16_t crc16_naive(uint16_t crc, uint8_t const *buffer, size_t len)
 {
-	
+
 }
 
 uint16_t crc16_test_correctness()
@@ -726,7 +755,7 @@ uint16_t crc16_test_correctness()
 	}
 }
 
-uint16_t crc16_test_empty()
+void crc16_test_empty()
 {
 	uint16_t crc;
 	crc = crc16(0x00, data, 0);
@@ -735,7 +764,7 @@ uint16_t crc16_test_empty()
 	assert(crc == 0xFF);
 }
 
-uint16_t crc16_test_combine()
+void crc16_test_combine()
 {
 	size_t i, j;
 	uint16_t crc;
@@ -754,6 +783,8 @@ int main(int argc, char **argv)
 {
 	int fd, ret;
 	uint16_t crc;
+
+	crc16_naive_test_byte();
 
 	crc16_test_correctness();
 	crc16_test_empty();
@@ -795,4 +826,6 @@ int main(int argc, char **argv)
 	// }
 
 	close(fd);
+
+	return 0;
 }
